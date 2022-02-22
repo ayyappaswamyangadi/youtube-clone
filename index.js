@@ -14,7 +14,7 @@ let div = document.getElementById("videodiv");
 */
 
 async function display(){
-    let res = await fetch(`https://youtube.googleapis.com/youtube/v3/search?q=popular%20videos&key=AIzaSyBvVKz4eQauET8s_hqpqvAfZfx8-XQc4hs&maxResults=25`);
+    let res = await fetch(`https://youtube.googleapis.com/youtube/v3/search?q=kannada%20coding%20videos&key=AIzaSyBvVKz4eQauET8s_hqpqvAfZfx8-XQc4hs&maxResults=25`);
     let data = await res.json();
     
     for({
