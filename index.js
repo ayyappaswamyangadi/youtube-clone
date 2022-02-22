@@ -14,14 +14,14 @@ let div = document.getElementById("videodiv");
 */
 
 async function display(){
-    let res = await fetch(`https://youtube.googleapis.com/youtube/v3/search?q=popular%20videos&key=AIzaSyBvVKz4eQauET8s_hqpqvAfZfx8-XQc4hs&maxResults=25`)
+    let res = await fetch(`https://youtube.googleapis.com/youtube/v3/search?q=popular%20videos&key=AIzaSyBvVKz4eQauET8s_hqpqvAfZfx8-XQc4hs&maxResults=25`);
     let data = await res.json();
     
     for({
-    id:{video}}of data.items){
+    id:{videoId}}of data.items){
     let videodiv= document.createElement("iframe")
     videodiv.setAttribute("class","mons")
-    videodiv.src = `https://www.youtube.com/embed/${video}`;
+    videodiv.src = `https://www.youtube.com/embed/${videoId}`;
     videodiv.allow = 'fullscreen'
     div.append(videodiv)
     
@@ -37,17 +37,17 @@ display();//calling here because we are not calling explicitly in html
 async function searchVideos(){
     document.getElementById("videodiv").innerHTML=""; // Empty 
 
-    let video = document.getElementById("video").value; // Search String/ Query String
+    let query = document.getElementById("video").value; // Search String/ Query String
 
 //search for videos
-let res = await fetch(`https://youtube.googleapis.com/youtube/v3/search?q=${video}&type=video&key=AIzaSyBvVKz4eQauET8s_hqpqvAfZfx8-XQc4hs&maxResults=25`)
+let res = await fetch(`https://youtube.googleapis.com/youtube/v3/search?q=${query}&type=video&key=AIzaSyBvVKz4eQauET8s_hqpqvAfZfx8-XQc4hs&maxResults=25`)
 let data = await res.json();
 
 for({
-id:{video}}of data.items){
+id:{videoId}}of data.items){
 let videodiv= document.createElement("iframe")
 videodiv.setAttribute("class","mons")
-videodiv.src = `https://www.youtube.com/embed/${video}`;
+videodiv.src = `https://www.youtube.com/embed/${videoId}`;
 videodiv.allow = 'fullscreen'
 div.append(videodiv)
 
