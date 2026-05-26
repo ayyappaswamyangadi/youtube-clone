@@ -369,6 +369,9 @@ const COMMENTS_DATA = [
   },
 ];
 
+/* ──────────────── DEFAULT HOME QUERY ──────────────── */
+const DEFAULT_HOME_QUERY = "kannada new songs";
+
 /* ──────────────── STATE ──────────────── */
 let sidebarState = "expanded"; // 'expanded' | 'mini' | 'hidden'
 let activeChip = "all";
@@ -376,6 +379,14 @@ let currentVideoId = null;
 let currentShortIdx = 0;
 let ctxTargetCard = null;
 let isDark = false;
+
+/* ──────────────── API STATE ──────────────── */
+let videos = []; // current video list shown in grid
+let shortsData = []; // current shorts list shown in shelf
+let nextPageToken = null; // for infinite scroll / load more
+let currentCategory = ""; // active videoCategoryId (empty = all)
+let currentQuery = ""; // active search query
+let isApiLoading = false; // prevent duplicate requests
 
 /* ──────────────── ELEMENTS ──────────────── */
 const $ = (id) => document.getElementById(id);
@@ -417,10 +428,10 @@ const shortsNext = $("shorts-next");
 /* ──────────────── INIT ──────────────── */
 document.addEventListener("DOMContentLoaded", () => {
   renderSkeletons();
-  setTimeout(() => {
-    renderVideos(VIDEOS);
-    renderShorts();
-  }, 800);
+  // Load home page with Kannada new songs on first visit
+  currentQuery = DEFAULT_HOME_QUERY;
+  loadSearchResults(DEFAULT_HOME_QUERY); // initial home feed
+  loadShorts(); // fetch real shorts from YouTube API
 
   initSidebar();
   initChips();
@@ -432,7 +443,153 @@ document.addEventListener("DOMContentLoaded", () => {
   initShortsViewer();
   injectDrawerNav();
   updateChipScrollBtns();
+  initInfiniteScroll(); // load more on scroll
 });
+
+/* ──────────────── API LOADERS ──────────────── */
+
+async function loadHomeVideos(pageToken = "", categoryId = "") {
+  if (isApiLoading) return;
+  isApiLoading = true;
+  try {
+    const { items, nextPageToken: npt } = await fetchHomeVideos(
+      pageToken,
+      categoryId,
+    );
+    if (pageToken) {
+      // Append more cards without re-rendering the whole grid
+      videos = [...videos, ...items];
+      appendVideoCards(items);
+    } else {
+      videos = items;
+      renderVideos(videos);
+    }
+    nextPageToken = npt;
+  } catch (err) {
+    console.warn("YouTube API error (home):", err.message);
+    // Fall back to static data on first load
+    if (!pageToken && !videos.length) {
+      videos = [...VIDEOS];
+      renderVideos(videos);
+    }
+  } finally {
+    isApiLoading = false;
+    removeLoadMoreSpinner();
+  }
+}
+
+async function loadShorts() {
+  try {
+    const { items } = await fetchShorts();
+    if (items.length) {
+      shortsData = items;
+      renderShorts();
+    } else {
+      // fallback to static
+      shortsData = [...SHORTS_DATA];
+      renderShorts();
+    }
+  } catch (err) {
+    console.warn("YouTube API error (shorts):", err.message);
+    shortsData = [...SHORTS_DATA];
+    renderShorts();
+  }
+}
+
+/* ──────────────── INFINITE SCROLL ──────────────── */
+
+function initInfiniteScroll() {
+  // Create a sentinel element after the video grid
+  const sentinel = document.createElement("div");
+  sentinel.id = "scroll-sentinel";
+  sentinel.style.cssText = "height:1px;width:100%;";
+  videoGrid.after(sentinel);
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && nextPageToken && !isApiLoading) {
+        showLoadMoreSpinner();
+        if (currentQuery) {
+          loadSearchResults(currentQuery, nextPageToken, true);
+        } else {
+          loadHomeVideos(nextPageToken, currentCategory);
+        }
+      }
+    },
+    { rootMargin: "200px" },
+  );
+  observer.observe(sentinel);
+}
+
+function showLoadMoreSpinner() {
+  let spinner = document.getElementById("load-more-spinner");
+  if (!spinner) {
+    spinner = document.createElement("div");
+    spinner.id = "load-more-spinner";
+    spinner.innerHTML = `
+      <div style="display:flex;justify-content:center;padding:32px 0;gap:8px">
+        ${[1, 2, 3].map(() => `<div style="width:8px;height:8px;border-radius:50%;background:var(--text3);animation:ytPulse 1s infinite alternate"></div>`).join("")}
+      </div>`;
+    const style = document.createElement("style");
+    style.textContent = `@keyframes ytPulse{from{opacity:.3;transform:scale(.8)}to{opacity:1;transform:scale(1)}}`;
+    document.head.appendChild(style);
+    document.getElementById("scroll-sentinel")?.after(spinner);
+  }
+}
+
+function removeLoadMoreSpinner() {
+  document.getElementById("load-more-spinner")?.remove();
+}
+
+/** Append new video cards without full re-render */
+function appendVideoCards(list) {
+  const startIdx = videos.length - list.length;
+  list.forEach((v, i) => {
+    const div = document.createElement("div");
+    div.innerHTML = videoCard(v, startIdx + i);
+    const card = div.firstElementChild;
+    videoGrid.appendChild(card);
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".card-menu-btn")) return;
+      openVideoModal(v);
+    });
+    card.querySelector(".card-menu-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      showCtxMenu(e, card);
+    });
+  });
+}
+
+async function loadSearchResults(query, pageToken = "", append = false) {
+  if (isApiLoading) return;
+  isApiLoading = true;
+  try {
+    const { items, nextPageToken: npt } = await searchVideos(query, pageToken);
+    if (append) {
+      videos = [...videos, ...items];
+      appendVideoCards(items);
+    } else {
+      videos = items;
+      renderVideos(videos);
+    }
+    nextPageToken = npt;
+  } catch (err) {
+    console.warn("YouTube API error (search):", err.message);
+    if (!append) {
+      const fallback = VIDEOS.filter(
+        (v) =>
+          v.title.toLowerCase().includes(query.toLowerCase()) ||
+          v.channel.toLowerCase().includes(query.toLowerCase()),
+      );
+      // If no local match (e.g. default Kannada query), show all static videos
+      videos = fallback.length ? fallback : [...VIDEOS];
+      renderVideos(videos);
+    }
+  } finally {
+    isApiLoading = false;
+    removeLoadMoreSpinner();
+  }
+}
 
 /* ──────────────── SKELETON ──────────────── */
 function renderSkeletons() {
@@ -483,7 +640,7 @@ function renderVideos(list) {
 }
 
 function videoCard(v, i) {
-  const thumb = `https://picsum.photos/seed/${v.id}/480/270`;
+  const thumb = v.thumb || `https://picsum.photos/seed/${v.id}/480/270`;
   const chAvatar = v.avatar || `https://picsum.photos/seed/${v.channel}/36/36`;
   const isLiveBadge = v.isLive
     ? `<span class="card-duration live-badge">● LIVE</span>`
@@ -525,8 +682,9 @@ function videoCard(v, i) {
 
 /* ──────────────── RENDER SHORTS ──────────────── */
 function renderShorts() {
-  shortsRow.innerHTML = SHORTS_DATA.map(
-    (s, i) => `
+  shortsRow.innerHTML = shortsData
+    .map(
+      (s, i) => `
     <div class="short-card" data-idx="${i}">
       <div class="short-card-thumb-wrap">
         <img class="short-card-thumb" src="${s.thumb}" alt="${s.title}" loading="lazy" />
@@ -538,7 +696,8 @@ function renderShorts() {
       </div>
     </div>
   `,
-  ).join("");
+    )
+    .join("");
 
   shortsRow.querySelectorAll(".short-card").forEach((card) => {
     card.addEventListener("click", () => {
@@ -546,6 +705,11 @@ function renderShorts() {
       openShortsViewer(currentShortIdx);
     });
   });
+}
+
+// Keep SHORTS_DATA reference working for the viewer (updated dynamically)
+function getShortsData() {
+  return shortsData.length ? shortsData : SHORTS_DATA;
 }
 
 /* ──────────────── SIDEBAR ──────────────── */
@@ -661,13 +825,49 @@ function updateChipScrollBtns() {
 
 function filterByChip(cat) {
   if (cat === "all") {
-    renderVideos(VIDEOS);
+    currentQuery = DEFAULT_HOME_QUERY;
+    currentCategory = "";
+    nextPageToken = null;
+    renderSkeletons();
+    loadSearchResults(DEFAULT_HOME_QUERY);
     return;
   }
-  const filtered = VIDEOS.filter(
-    (v) => v.cat === cat || (cat === "shorts" && v.duration.includes(":0")),
-  );
-  renderVideos(filtered);
+  currentQuery = "";
+  if (cat === "shorts") {
+    // Show full shorts section
+    document
+      .getElementById("shorts-shelf")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  // Use YouTube category ID if available, otherwise search by keyword
+  const catId = YT_CATEGORY_IDS[cat] || "";
+  currentCategory = catId;
+  nextPageToken = null;
+  renderSkeletons();
+  if (catId) {
+    loadHomeVideos("", catId);
+  } else {
+    // Search by keyword for unmapped categories
+    loadSearchResultsByChip(cat);
+  }
+}
+
+async function loadSearchResultsByChip(keyword) {
+  if (isApiLoading) return;
+  isApiLoading = true;
+  try {
+    const { items, nextPageToken: npt } = await searchVideos(keyword);
+    videos = items;
+    renderVideos(videos);
+    nextPageToken = npt;
+  } catch (err) {
+    console.warn("YouTube API error (chip):", err.message);
+    videos = VIDEOS.filter((v) => v.cat === keyword);
+    renderVideos(videos);
+  } finally {
+    isApiLoading = false;
+  }
 }
 
 function filterByCategory(filter) {
@@ -700,14 +900,27 @@ function filterByCategory(filter) {
 
 /* ──────────────── SEARCH ──────────────── */
 function initSearch() {
-  let debounceTimer;
+  let suggestTimer;
+
   searchInput.addEventListener("input", () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(showSuggestions, 200);
+    clearTimeout(suggestTimer);
+    const q = searchInput.value.trim();
+    if (!q) {
+      hideSuggestions();
+      return;
+    }
+    // Debounce: 500ms for API suggestions
+    suggestTimer = setTimeout(() => showSuggestions(q), 500);
   });
-  searchInput.addEventListener("focus", showSuggestions);
+
+  searchInput.addEventListener("focus", () => {
+    const q = searchInput.value.trim();
+    if (q.length >= 2) showSuggestions(q);
+  });
+
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
+      clearTimeout(suggestTimer);
       doSearch();
       hideSuggestions();
     }
@@ -715,15 +928,23 @@ function initSearch() {
       hideSuggestions();
       searchInput.blur();
     }
+    // Arrow key navigation in suggestions
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      navigateSuggestions(e.key === "ArrowDown" ? 1 : -1);
+    }
   });
+
   searchSubmit.addEventListener("click", () => {
     doSearch();
     hideSuggestions();
   });
+
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".nav-center")) hideSuggestions();
   });
-  // / shortcut
+
+  // / shortcut to focus search
   document.addEventListener("keydown", (e) => {
     if (e.key === "/" && !e.target.matches("input,textarea")) {
       e.preventDefault();
@@ -732,35 +953,88 @@ function initSearch() {
   });
 }
 
-function showSuggestions() {
-  const q = searchInput.value.trim().toLowerCase();
-  const filtered = q
-    ? SUGGESTIONS.filter((s) => s.includes(q))
-    : SUGGESTIONS.slice(0, 6);
-
-  if (!filtered.length) {
+async function showSuggestions(q) {
+  if (!q || q.length < 2) {
     hideSuggestions();
     return;
   }
-  searchSuggestions.innerHTML = filtered
-    .map(
-      (s) => `
-    <div class="suggestion-item" data-query="${s}">
-      <span class="material-icons-round">search</span>
-      <span>${highlightMatch(s, q)}</span>
-    </div>
-  `,
-    )
-    .join("");
+
+  // Show loading state in suggestions
+  searchSuggestions.innerHTML = `
+    <div class="suggestion-item suggestion-loading">
+      <span class="material-icons-round" style="animation:spin 1s linear infinite">refresh</span>
+      <span>Searching…</span>
+    </div>`;
   searchSuggestions.classList.add("visible");
-  searchSuggestions.querySelectorAll(".suggestion-item").forEach((item) => {
-    item.addEventListener("mousedown", (e) => {
-      e.preventDefault();
-      searchInput.value = item.dataset.query;
-      doSearch();
+
+  try {
+    const suggestions = await fetchSuggestions(q);
+    if (!suggestions.length) {
       hideSuggestions();
+      return;
+    }
+
+    searchSuggestions.innerHTML = suggestions
+      .map(
+        (s) => `
+      <div class="suggestion-item" data-query="${escapeHtml(s.text)}" data-video-id="${s.videoId}">
+        <span class="material-icons-round">search</span>
+        <span>${highlightMatch(escapeHtml(s.text), q)}</span>
+      </div>`,
+      )
+      .join("");
+    searchSuggestions.classList.add("visible");
+
+    searchSuggestions.querySelectorAll(".suggestion-item").forEach((item) => {
+      item.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        searchInput.value = item.dataset.query;
+        doSearch();
+        hideSuggestions();
+      });
     });
-  });
+  } catch {
+    // Fallback to local suggestions on API error
+    const filtered = SUGGESTIONS.filter((s) =>
+      s.toLowerCase().includes(q.toLowerCase()),
+    ).slice(0, 6);
+    if (!filtered.length) {
+      hideSuggestions();
+      return;
+    }
+    searchSuggestions.innerHTML = filtered
+      .map(
+        (s) => `
+      <div class="suggestion-item" data-query="${s}">
+        <span class="material-icons-round">search</span>
+        <span>${highlightMatch(s, q)}</span>
+      </div>`,
+      )
+      .join("");
+    searchSuggestions.querySelectorAll(".suggestion-item").forEach((item) => {
+      item.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        searchInput.value = item.dataset.query;
+        doSearch();
+        hideSuggestions();
+      });
+    });
+  }
+}
+
+function navigateSuggestions(dir) {
+  const items = [...searchSuggestions.querySelectorAll(".suggestion-item")];
+  if (!items.length) return;
+  const active = searchSuggestions.querySelector(".suggestion-item.focused");
+  let idx = active
+    ? items.indexOf(active) + dir
+    : dir === 1
+      ? 0
+      : items.length - 1;
+  idx = Math.max(0, Math.min(items.length - 1, idx));
+  items.forEach((el) => el.classList.remove("focused"));
+  items[idx].classList.add("focused");
+  searchInput.value = items[idx].dataset.query;
 }
 
 function hideSuggestions() {
@@ -769,28 +1043,43 @@ function hideSuggestions() {
 
 function highlightMatch(str, q) {
   if (!q) return str;
-  return str.replace(new RegExp(`(${q})`, "gi"), "<strong>$1</strong>");
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return str.replace(new RegExp(`(${escaped})`, "gi"), "<strong>$1</strong>");
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function doSearch() {
-  const q = searchInput.value.trim().toLowerCase();
+  const q = searchInput.value.trim();
   if (!q) {
-    renderVideos(VIDEOS);
+    currentQuery = DEFAULT_HOME_QUERY;
+    currentCategory = "";
+    nextPageToken = null;
+    // Reset chips to All
+    chipsScroll
+      .querySelectorAll(".chip")
+      .forEach((c) => c.classList.remove("active"));
+    chipsScroll.querySelector('[data-cat="all"]').classList.add("active");
+    renderSkeletons();
+    loadSearchResults(DEFAULT_HOME_QUERY);
     return;
   }
-  const results = VIDEOS.filter(
-    (v) =>
-      v.title.toLowerCase().includes(q) ||
-      v.channel.toLowerCase().includes(q) ||
-      v.cat.toLowerCase().includes(q),
-  );
-  // Reset chips
+  currentQuery = q;
+  currentCategory = "";
+  nextPageToken = null;
+  // Reset chips to All
   chipsScroll
     .querySelectorAll(".chip")
     .forEach((c) => c.classList.remove("active"));
   chipsScroll.querySelector('[data-cat="all"]').classList.add("active");
-  renderVideos(results);
-  // Scroll to grid
+  renderSkeletons();
+  loadSearchResults(q);
   videoGrid.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -941,7 +1230,8 @@ function renderComments() {
 }
 
 function renderUpNext(current) {
-  const others = VIDEOS.filter((v) => v.id !== current.id).slice(0, 14);
+  const pool = videos.length ? videos : VIDEOS;
+  const others = pool.filter((v) => v.id !== current.id).slice(0, 14);
   upNextList.innerHTML = others
     .map(
       (v) => `
@@ -1002,14 +1292,16 @@ function closeShortsViewer() {
 }
 
 function navigateShort(dir) {
+  const data = getShortsData();
   const next = currentShortIdx + dir;
-  if (next < 0 || next >= SHORTS_DATA.length) return;
+  if (next < 0 || next >= data.length) return;
   currentShortIdx = next;
   renderShortsStack();
 }
 
 function renderShortsStack() {
-  const s = SHORTS_DATA[currentShortIdx];
+  const data = getShortsData();
+  const s = data[currentShortIdx];
   shortsStack.innerHTML = `
     <div class="short-viewer-item active">
       <div class="short-viewer-video">
@@ -1033,7 +1325,7 @@ function renderShortsStack() {
   `;
   shortsStack.querySelector(".short-viewer-item").appendChild(actions);
   // Update nav button visibility
+  const _sd = getShortsData();
   shortsPrev.style.opacity = currentShortIdx === 0 ? "0.3" : "1";
-  shortsNext.style.opacity =
-    currentShortIdx === SHORTS_DATA.length - 1 ? "0.3" : "1";
+  shortsNext.style.opacity = currentShortIdx === _sd.length - 1 ? "0.3" : "1";
 }
