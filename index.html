@@ -1,49 +1,707 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <link rel="icon" type="image/x-icon" href="assets/favicon.png" />
-
-    <title>Youtube clone | Ayyappa Swamy</title>
-
+    <title>YouTube</title>
     <link
       rel="stylesheet"
-      href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
     />
     <link rel="stylesheet" href="index.css" />
   </head>
-
   <body>
-    <div id="navbar">
-      <div id="logo">
-        <i class="fas fa-bars"></i>
-        <img src="assets/logo.jpg" alt="site-logo" />
+    <!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+    <header id="navbar">
+      <!-- Left: Hamburger + Logo -->
+      <div class="nav-left">
+        <button
+          class="icon-btn"
+          id="hamburger-btn"
+          title="Menu"
+          aria-label="Menu"
+        >
+          <span class="material-icons-round">menu</span>
+        </button>
+        <a href="#" class="logo-link" id="logo-link">
+          <svg
+            class="yt-logo"
+            viewBox="0 0 90 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              class="logo-icon-bg"
+              d="M27.9727 3.12324C27.6435 1.89323 26.6768 0.926623 25.4468 0.597366C23.2197 0 14.285 0 14.285 0C14.285 0 5.35042 0 3.12323 0.597366C1.89323 0.926623 0.926623 1.89323 0.597366 3.12324C0 5.35042 0 10 0 10C0 10 0 14.6496 0.597366 16.8768C0.926623 18.1068 1.89323 19.0734 3.12323 19.4026C5.35042 20 14.285 20 14.285 20C14.285 20 23.2197 20 25.4468 19.4026C26.6768 19.0734 27.6435 18.1068 27.9727 16.8768C28.5701 14.6496 28.5701 10 28.5701 10C28.5701 10 28.5677 5.35042 27.9727 3.12324Z"
+              fill="#FF0000"
+            />
+            <path
+              d="M11.4253 14.2854L18.8477 10.0004L11.4253 5.71533V14.2854Z"
+              fill="white"
+            />
+            <path
+              class="logo-text"
+              d="M34.6024 13.0036L31.3945 1.41846H34.1932L35.3174 6.6701C35.6043 7.96361 35.8136 9.06662 35.95 9.97913H36.0323C36.1264 9.32532 36.3381 8.22937 36.665 6.68892L37.8291 1.41846H40.6278L37.3799 13.0036V18.561H34.6001V13.0036H34.6024Z"
+            />
+            <!-- more text paths omitted for brevity – we use text instead -->
+          </svg>
+          <span class="logo-text-word">YouTube</span>
+          <span class="logo-country">IN</span>
+        </a>
       </div>
 
-        <div id="search">
-          <input type="text" id="video" placeholder="Search for videos" />
-          <div id="search-icon">
-          <span onclick="searchVideos()">
-            <i class="fas fa-search"></i>
-          </span>
+      <!-- Center: Search -->
+      <div class="nav-center">
+        <div class="search-wrapper">
+          <div class="search-bar" id="search-bar">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search"
+              autocomplete="off"
+            />
+            <button
+              class="search-kbd-btn"
+              id="search-kbd-btn"
+              aria-label="Search with keyboard shortcut"
+            >
+              <span class="kbd-shortcut">/</span>
+            </button>
+            <button
+              class="search-submit-btn"
+              id="search-submit-btn"
+              aria-label="Search"
+            >
+              <span class="material-icons-round">search</span>
+            </button>
+          </div>
+          <button class="icon-btn mic-btn" title="Search with your voice">
+            <span class="material-icons-round">mic</span>
+          </button>
         </div>
-        </div>
+        <!-- Search suggestions dropdown -->
+        <div class="search-suggestions" id="search-suggestions"></div>
+      </div>
 
-      <div id="end">
-        <i class="fa fa-microphone"></i>
-        <i class="fa fa-video"></i>
-        <i class="fa fa-th"></i>
-        <i class="fa fa-bell"></i>
-        <i class="fa fa-user"></i>
+      <!-- Right: Action icons -->
+      <div class="nav-right">
+        <button class="icon-btn" title="Create">
+          <span class="material-icons-round">video_call</span>
+        </button>
+        <button class="icon-btn notif-btn" title="Notifications" id="notif-btn">
+          <span class="material-icons-round">notifications</span>
+          <span class="notif-badge">9+</span>
+        </button>
+        <div class="avatar-btn" id="avatar-btn" title="Account">
+          <span class="avatar-initials">A</span>
+        </div>
+        <button
+          class="icon-btn theme-toggle-btn"
+          id="theme-toggle"
+          title="Toggle theme"
+        >
+          <span class="material-icons-round" id="theme-icon">dark_mode</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════ NOTIFICATION PANEL ═══════════════════════ -->
+    <div class="notif-panel" id="notif-panel">
+      <div class="notif-panel-header">
+        <span>Notifications</span>
+        <button class="notif-settings-btn">
+          <span class="material-icons-round">settings</span>
+        </button>
+      </div>
+      <div class="notif-list">
+        <div class="notif-item unread">
+          <img
+            src="https://picsum.photos/seed/ch1/40/40"
+            class="notif-avatar"
+          />
+          <div class="notif-content">
+            <p>
+              <strong>TechWorld</strong> uploaded:
+              <em>iPhone 17 Pro Max Review — It Finally Changed!</em>
+            </p>
+            <span class="notif-time">2 hours ago</span>
+          </div>
+          <div class="notif-thumb">
+            <img src="https://picsum.photos/seed/v1/80/45" />
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <img
+            src="https://picsum.photos/seed/ch2/40/40"
+            class="notif-avatar"
+          />
+          <div class="notif-content">
+            <p>
+              <strong>Code with Fireship</strong> uploaded:
+              <em>I Tried Every JS Framework in 2026</em>
+            </p>
+            <span class="notif-time">5 hours ago</span>
+          </div>
+          <div class="notif-thumb">
+            <img src="https://picsum.photos/seed/v2/80/45" />
+          </div>
+        </div>
+        <div class="notif-item">
+          <img
+            src="https://picsum.photos/seed/ch3/40/40"
+            class="notif-avatar"
+          />
+          <div class="notif-content">
+            <p>
+              <strong>MrBeast</strong> uploaded:
+              <em>I Survived 100 Days in Antarctica</em>
+            </p>
+            <span class="notif-time">1 day ago</span>
+          </div>
+          <div class="notif-thumb">
+            <img src="https://picsum.photos/seed/v3/80/45" />
+          </div>
+        </div>
+        <div class="notif-item">
+          <img
+            src="https://picsum.photos/seed/ch4/40/40"
+            class="notif-avatar"
+          />
+          <div class="notif-content">
+            <p>
+              <strong>Veritasium</strong> liked your comment on
+              <em>The Biggest Unsolved Problem</em>
+            </p>
+            <span class="notif-time">2 days ago</span>
+          </div>
+          <div class="notif-thumb">
+            <img src="https://picsum.photos/seed/v4/80/45" />
+          </div>
+        </div>
+      </div>
+      <div class="notif-panel-footer">
+        <a href="#">View all notifications</a>
       </div>
     </div>
-    <div id="videodiv">
-      <!-- <div id="video"> -->
-      <!-- <iframe width="560" height="315" src="https://www.youtube.com/embed/tPgBUhI7N94?list=PLxyy1gwfrmZiNzcPvrS0ZzYvJPdIwuujD" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> -->
-      <!-- </div> -->
+
+    <!-- ═══════════════════════ ACCOUNT MENU ═══════════════════════ -->
+    <div class="account-menu" id="account-menu">
+      <div class="account-menu-profile">
+        <div class="account-menu-avatar"><span>A</span></div>
+        <div>
+          <div class="account-menu-name">Ayyappa Swamy</div>
+          <div class="account-menu-email">ayyappaswamy50@gmail.com</div>
+          <a href="#" class="account-menu-channel-link">View your channel</a>
+        </div>
+      </div>
+      <div class="menu-divider"></div>
+      <ul class="account-menu-list">
+        <li>
+          <span class="material-icons-round">account_circle</span> Google
+          Account
+        </li>
+        <li>
+          <span class="material-icons-round">switch_account</span> Switch
+          account
+        </li>
+        <li><span class="material-icons-round">logout</span> Sign out</li>
+      </ul>
+      <div class="menu-divider"></div>
+      <ul class="account-menu-list">
+        <li>
+          <span class="material-icons-round">youtube_studio</span> YouTube
+          Studio
+        </li>
+        <li>
+          <span class="material-icons-round">currency_rupee</span> Purchases and
+          memberships
+        </li>
+      </ul>
+      <div class="menu-divider"></div>
+      <ul class="account-menu-list">
+        <li>
+          <span class="material-icons-round">dark_mode</span> Appearance: Light
+        </li>
+        <li>
+          <span class="material-icons-round">translate</span> Language: English
+        </li>
+        <li><span class="material-icons-round">settings</span> Settings</li>
+      </ul>
+      <div class="menu-divider"></div>
+      <ul class="account-menu-list">
+        <li><span class="material-icons-round">help</span> Help</li>
+        <li>
+          <span class="material-icons-round">feedback</span> Send feedback
+        </li>
+      </ul>
+    </div>
+
+    <!-- ═══════════════════════ LAYOUT WRAPPER ═══════════════════════ -->
+    <div class="layout" id="layout">
+      <!-- ════════════════ SIDEBAR ════════════════ -->
+      <aside id="sidebar" class="sidebar sidebar-expanded">
+        <!-- Full sidebar (expanded) -->
+        <nav class="sidebar-full">
+          <div class="sidebar-section">
+            <a href="#" class="sidebar-item active" data-filter="home">
+              <span class="material-icons-round">home</span><span>Home</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="shorts">
+              <svg
+                class="shorts-icon"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M17.77 10.32l-1.2-.5L18 9.06c1.84-.96 2.53-3.23 1.56-5.06s-3.23-2.53-5.06-1.56L6 6.94c-1.29.68-2.07 2.04-2 3.49.07 1.42.93 2.67 2.22 3.25L7.4 14.2 6 14.87C4.16 15.83 3.47 18.1 4.44 19.93S7.67 22.46 9.5 21.5L18 17.06c1.29-.68 2.07-2.04 2-3.49-.07-1.42-.93-2.67-2.23-3.25zM10 14.65v-5.3L15 12l-5 2.65z"
+                />
+              </svg>
+              <span>Shorts</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="subscriptions">
+              <span class="material-icons-round">subscriptions</span
+              ><span>Subscriptions</span>
+            </a>
+          </div>
+
+          <div class="sidebar-divider"></div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">
+              You
+              <span
+                class="material-icons-round"
+                style="font-size: 16px; vertical-align: middle"
+                >chevron_right</span
+              >
+            </div>
+            <a href="#" class="sidebar-item">
+              <span class="material-icons-round">manage_accounts</span
+              ><span>Your channel</span>
+            </a>
+            <a href="#" class="sidebar-item">
+              <span class="material-icons-round">history</span
+              ><span>History</span>
+            </a>
+            <a href="#" class="sidebar-item">
+              <span class="material-icons-round">playlist_play</span
+              ><span>Playlists</span>
+            </a>
+            <a href="#" class="sidebar-item">
+              <span class="material-icons-round">smart_display</span
+              ><span>Your videos</span>
+            </a>
+            <a href="#" class="sidebar-item">
+              <span class="material-icons-round">watch_later</span
+              ><span>Watch later</span>
+            </a>
+            <a href="#" class="sidebar-item">
+              <span class="material-icons-round">thumb_up</span
+              ><span>Liked videos</span>
+            </a>
+            <a href="#" class="sidebar-item" id="show-more-you">
+              <span class="material-icons-round">expand_more</span
+              ><span>Show more</span>
+            </a>
+          </div>
+
+          <div class="sidebar-divider"></div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Subscriptions</div>
+            <a href="#" class="sidebar-item sub-item">
+              <img
+                src="https://picsum.photos/seed/sub1/24/24"
+                class="sub-avatar"
+              /><span>MrBeast</span>
+              <span class="live-dot"></span>
+            </a>
+            <a href="#" class="sidebar-item sub-item">
+              <img
+                src="https://picsum.photos/seed/sub2/24/24"
+                class="sub-avatar"
+              /><span>Fireship</span>
+            </a>
+            <a href="#" class="sidebar-item sub-item">
+              <img
+                src="https://picsum.photos/seed/sub3/24/24"
+                class="sub-avatar"
+              /><span>Veritasium</span>
+            </a>
+            <a href="#" class="sidebar-item sub-item">
+              <img
+                src="https://picsum.photos/seed/sub4/24/24"
+                class="sub-avatar"
+              /><span>Kurzgesagt</span>
+            </a>
+            <a href="#" class="sidebar-item sub-item">
+              <img
+                src="https://picsum.photos/seed/sub5/24/24"
+                class="sub-avatar"
+              /><span>MKBHD</span>
+            </a>
+            <a href="#" class="sidebar-item sub-item">
+              <img
+                src="https://picsum.photos/seed/sub6/24/24"
+                class="sub-avatar"
+              /><span>Lex Fridman</span>
+            </a>
+            <a href="#" class="sidebar-item" id="show-more-subs">
+              <span class="material-icons-round">expand_more</span
+              ><span>Show 12 more</span>
+            </a>
+          </div>
+
+          <div class="sidebar-divider"></div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Explore</div>
+            <a href="#" class="sidebar-item" data-filter="trending">
+              <span class="material-icons-round">local_fire_department</span
+              ><span>Trending</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="shopping">
+              <span class="material-icons-round">shopping_bag</span
+              ><span>Shopping</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="music">
+              <span class="material-icons-round">music_note</span
+              ><span>Music</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="movies">
+              <span class="material-icons-round">movie</span
+              ><span>Movies &amp; TV</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="live">
+              <span class="material-icons-round">stream</span><span>Live</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="gaming">
+              <span class="material-icons-round">sports_esports</span
+              ><span>Gaming</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="news">
+              <span class="material-icons-round">newspaper</span
+              ><span>News</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="sports">
+              <span class="material-icons-round">sports_soccer</span
+              ><span>Sports</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="podcasts">
+              <span class="material-icons-round">podcast</span
+              ><span>Podcasts</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="courses">
+              <span class="material-icons-round">school</span
+              ><span>Courses</span>
+            </a>
+            <a href="#" class="sidebar-item" data-filter="fashion">
+              <span class="material-icons-round">checkroom</span
+              ><span>Fashion &amp; Beauty</span>
+            </a>
+          </div>
+
+          <div class="sidebar-divider"></div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">More from YouTube</div>
+            <a href="#" class="sidebar-item">
+              <span class="material-icons-round" style="color: #ff0000"
+                >smart_display</span
+              ><span>YouTube Premium</span>
+            </a>
+            <a href="#" class="sidebar-item">
+              <span class="material-icons-round" style="color: #ff0000"
+                >music_video</span
+              ><span>YouTube Music</span>
+            </a>
+            <a href="#" class="sidebar-item">
+              <span class="material-icons-round" style="color: #ff0000"
+                >child_care</span
+              ><span>YouTube Kids</span>
+            </a>
+          </div>
+
+          <div class="sidebar-divider"></div>
+
+          <div class="sidebar-section sidebar-footer">
+            <div class="footer-links">
+              <a href="#">About</a><a href="#">Press</a
+              ><a href="#">Copyright</a> <a href="#">Contact us</a
+              ><a href="#">Creators</a><a href="#">Advertise</a>
+              <a href="#">Developers</a>
+            </div>
+            <div class="footer-links">
+              <a href="#">Terms</a><a href="#">Privacy</a
+              ><a href="#">Policy &amp; Safety</a>
+              <a href="#">How YouTube works</a><a href="#">Test new features</a>
+            </div>
+            <p class="footer-copy">© 2026 Google LLC</p>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Sidebar Mini (icon-only, shown when sidebar is mini) -->
+      <aside id="sidebar-mini" class="sidebar-mini hidden">
+        <nav class="sidebar-mini-nav">
+          <a href="#" class="mini-item active" data-filter="home">
+            <span class="material-icons-round">home</span><span>Home</span>
+          </a>
+          <a href="#" class="mini-item" data-filter="shorts">
+            <svg class="shorts-icon" viewBox="0 0 24 24">
+              <path
+                d="M17.77 10.32l-1.2-.5L18 9.06c1.84-.96 2.53-3.23 1.56-5.06s-3.23-2.53-5.06-1.56L6 6.94c-1.29.68-2.07 2.04-2 3.49.07 1.42.93 2.67 2.22 3.25L7.4 14.2 6 14.87C4.16 15.83 3.47 18.1 4.44 19.93S7.67 22.46 9.5 21.5L18 17.06c1.29-.68 2.07-2.04 2-3.49-.07-1.42-.93-2.67-2.23-3.25zM10 14.65v-5.3L15 12l-5 2.65z"
+              />
+            </svg>
+            <span>Shorts</span>
+          </a>
+          <a href="#" class="mini-item" data-filter="subscriptions">
+            <span class="material-icons-round">subscriptions</span
+            ><span>Subscriptions</span>
+          </a>
+          <a href="#" class="mini-item">
+            <span class="material-icons-round">video_library</span
+            ><span>You</span>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Sidebar overlay drawer (mobile / over-content) -->
+      <div class="sidebar-overlay" id="sidebar-overlay"></div>
+      <aside id="sidebar-drawer" class="sidebar-drawer hidden">
+        <!-- same nav content duplicated for mobile drawer -->
+        <div class="drawer-header">
+          <button class="icon-btn" id="drawer-close-btn">
+            <span class="material-icons-round">menu</span>
+          </button>
+          <a href="#" class="logo-link">
+            <span class="logo-text-word">YouTube</span
+            ><span class="logo-country">IN</span>
+          </a>
+        </div>
+        <nav class="sidebar-full drawer-nav">
+          <!-- injected by JS -->
+        </nav>
+      </aside>
+
+      <!-- ════════════════ MAIN CONTENT ════════════════ -->
+      <main id="main-content">
+        <!-- Category chips -->
+        <div class="chips-container" id="chips-container">
+          <button class="chips-scroll-btn left" id="chips-left">
+            <span class="material-icons-round">chevron_left</span>
+          </button>
+          <div class="chips-scroll" id="chips-scroll">
+            <button class="chip active" data-cat="all">All</button>
+            <button class="chip" data-cat="music">Music</button>
+            <button class="chip" data-cat="gaming">Gaming</button>
+            <button class="chip" data-cat="news">News</button>
+            <button class="chip" data-cat="live">Live</button>
+            <button class="chip" data-cat="coding">Coding</button>
+            <button class="chip" data-cat="sports">Sports</button>
+            <button class="chip" data-cat="movies">Movies</button>
+            <button class="chip" data-cat="cooking">Cooking</button>
+            <button class="chip" data-cat="travel">Travel</button>
+            <button class="chip" data-cat="science">Science</button>
+            <button class="chip" data-cat="comedy">Comedy</button>
+            <button class="chip" data-cat="tech">Tech Reviews</button>
+            <button class="chip" data-cat="podcasts">Podcasts</button>
+            <button class="chip" data-cat="fitness">Fitness</button>
+            <button class="chip" data-cat="fashion">Fashion</button>
+            <button class="chip" data-cat="autos">Autos</button>
+            <button class="chip" data-cat="anime">Anime</button>
+            <button class="chip" data-cat="shorts">Shorts</button>
+          </div>
+          <button class="chips-scroll-btn right" id="chips-right">
+            <span class="material-icons-round">chevron_right</span>
+          </button>
+        </div>
+
+        <!-- Video Grid -->
+        <div class="video-grid" id="video-grid">
+          <!-- Cards injected by JS -->
+        </div>
+
+        <!-- Shorts Row -->
+        <div class="shorts-shelf" id="shorts-shelf">
+          <div class="shelf-header">
+            <svg class="shorts-icon-lg" viewBox="0 0 24 24">
+              <path
+                d="M17.77 10.32l-1.2-.5L18 9.06c1.84-.96 2.53-3.23 1.56-5.06s-3.23-2.53-5.06-1.56L6 6.94c-1.29.68-2.07 2.04-2 3.49.07 1.42.93 2.67 2.22 3.25L7.4 14.2 6 14.87C4.16 15.83 3.47 18.1 4.44 19.93S7.67 22.46 9.5 21.5L18 17.06c1.29-.68 2.07-2.04 2-3.49-.07-1.42-.93-2.67-2.23-3.25zM10 14.65v-5.3L15 12l-5 2.65z"
+              />
+            </svg>
+            <h2>Shorts</h2>
+            <a href="#" class="shelf-see-all"
+              >See all
+              <span class="material-icons-round">chevron_right</span></a
+            >
+          </div>
+          <div class="shorts-row" id="shorts-row">
+            <!-- injected by JS -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ═══════════════════════ VIDEO MODAL ═══════════════════════ -->
+    <div class="video-modal-overlay" id="video-modal-overlay">
+      <div class="video-modal" id="video-modal">
+        <div class="video-modal-left">
+          <div class="video-player-wrap">
+            <iframe
+              id="modal-iframe"
+              src=""
+              frameborder="0"
+              allowfullscreen
+              allow="
+                accelerometer;
+                autoplay;
+                clipboard-write;
+                encrypted-media;
+                gyroscope;
+                picture-in-picture;
+              "
+            ></iframe>
+          </div>
+          <!-- Video info below player -->
+          <div class="video-info-panel">
+            <h1 class="modal-title" id="modal-title"></h1>
+            <div class="video-meta-row">
+              <span class="modal-views" id="modal-views"></span>
+              <span class="modal-date" id="modal-date"></span>
+            </div>
+            <div class="video-action-bar">
+              <button class="action-pill active-pill">
+                <span class="material-icons-round">thumb_up</span>
+                <span id="modal-likes"></span>
+              </button>
+              <button class="action-pill">
+                <span class="material-icons-round">thumb_down</span> Dislike
+              </button>
+              <button class="action-pill">
+                <span class="material-icons-round">share</span> Share
+              </button>
+              <button class="action-pill">
+                <span class="material-icons-round">download</span> Download
+              </button>
+              <button class="action-pill">
+                <span class="material-icons-round">cut</span> Clip
+              </button>
+              <button class="action-pill">
+                <span class="material-icons-round">save</span> Save
+              </button>
+              <button class="action-pill action-more">
+                <span class="material-icons-round">more_horiz</span>
+              </button>
+            </div>
+            <div class="channel-row">
+              <img class="channel-row-avatar" id="modal-ch-avatar" src="" />
+              <div class="channel-row-info">
+                <span class="channel-row-name" id="modal-ch-name"></span>
+                <span class="channel-row-subs" id="modal-ch-subs"></span>
+              </div>
+              <button class="subscribe-btn" id="modal-sub-btn">
+                Subscribe
+              </button>
+            </div>
+            <div class="video-description-box" id="video-description-box">
+              <div class="description-header" id="description-toggle">
+                <span id="modal-desc-short"></span>
+                <span class="desc-expand-label">...more</span>
+              </div>
+              <div class="description-full hidden" id="description-full">
+                <p id="modal-desc-full"></p>
+                <div class="desc-tags" id="desc-tags"></div>
+              </div>
+            </div>
+            <!-- Comments -->
+            <div class="comments-section">
+              <div class="comments-header">
+                <span class="comments-count" id="comments-count"></span>
+                <button class="sort-btn">
+                  <span class="material-icons-round">sort</span> Sort by
+                </button>
+              </div>
+              <div class="comment-input-row">
+                <div class="comment-input-avatar"><span>A</span></div>
+                <input
+                  type="text"
+                  class="comment-input"
+                  placeholder="Add a comment..."
+                />
+              </div>
+              <div class="comments-list" id="comments-list">
+                <!-- injected -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Sidebar: Up next -->
+        <div class="video-modal-right">
+          <div class="up-next-header">
+            <span>Up next</span>
+            <label class="autoplay-toggle">
+              <input type="checkbox" id="autoplay-check" checked />
+              <span class="autoplay-slider"></span>
+              <span>Autoplay</span>
+            </label>
+          </div>
+          <div class="up-next-list" id="up-next-list">
+            <!-- injected -->
+          </div>
+        </div>
+        <button class="modal-close-btn" id="modal-close-btn">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════ SHORTS VIEWER ═══════════════════════ -->
+    <div class="shorts-viewer-overlay hidden" id="shorts-viewer-overlay">
+      <div class="shorts-viewer">
+        <button class="modal-close-btn shorts-close" id="shorts-close">
+          <span class="material-icons-round">close</span>
+        </button>
+        <div class="shorts-stack" id="shorts-stack">
+          <!-- injected -->
+        </div>
+        <button class="shorts-nav-btn shorts-prev" id="shorts-prev">
+          <span class="material-icons-round">expand_less</span>
+        </button>
+        <button class="shorts-nav-btn shorts-next" id="shorts-next">
+          <span class="material-icons-round">expand_more</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Context / Video Card menu -->
+    <div class="ctx-menu hidden" id="ctx-menu">
+      <ul>
+        <li>
+          <span class="material-icons-round">watch_later</span> Save to Watch
+          later
+        </li>
+        <li>
+          <span class="material-icons-round">playlist_add</span> Save to
+          playlist
+        </li>
+        <li><span class="material-icons-round">download</span> Download</li>
+        <li><span class="material-icons-round">share</span> Share</li>
+        <li class="menu-divider-li"></li>
+        <li>
+          <span class="material-icons-round">not_interested</span> Not
+          interested
+        </li>
+        <li>
+          <span class="material-icons-round">block</span> Don't recommend
+          channel
+        </li>
+        <li><span class="material-icons-round">flag</span> Report</li>
+      </ul>
     </div>
 
     <script src="index.js"></script>
