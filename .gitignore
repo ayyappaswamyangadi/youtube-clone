@@ -1,0 +1,16 @@
+# Private config (API keys — never commit)
+config.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (if ever used)
+node_modules/
+npm-debug.log*
