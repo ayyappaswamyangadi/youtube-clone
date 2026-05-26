@@ -302,6 +302,22 @@ ul {
   color: var(--text3);
   font-size: 18px;
 }
+.suggestion-item.focused,
+.suggestion-item.focused:hover {
+  background: var(--active);
+}
+.suggestion-item strong {
+  font-weight: 600;
+  color: var(--text);
+}
+.suggestion-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
 /* Nav Right */
 .nav-right {
