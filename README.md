@@ -2,9 +2,7 @@
 
 A pixel-perfect YouTube UI clone built with vanilla HTML, CSS, and JavaScript — powered by the **YouTube Data API v3**.
 
-## 🔴 Live Demo
-
-👉 **[https://ayyappaswamyangadi.github.io/youtube-clone/](https://ayyappaswamyangadi.github.io/youtube-clone/)**
+##  Live link https://youtube-clone-plum-nine.vercel.app/
 
 ---
 
